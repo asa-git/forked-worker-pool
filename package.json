@@ -19,7 +19,8 @@
 		"mocha": "",
 		"chai": "",
 		"rimraf": "",
-		"istanbul": ""
+		"istanbul": "",
+		"coveralls": ""
 	},
 
 	"scripts": {
@@ -29,7 +30,9 @@
 
 		"test-lint": "npm run -s lint",
 		"pretest-mocha":"rimraf ./build/test/coverage",
-		"test-mocha": "istanbul --config=./test/conf/istanbul.json cover ./node_modules/mocha/bin/_mocha -- -R spec --full-trace --trace ./test/**/*.spec.js",
-		"test": "npm run -s test-lint && npm run -s test-mocha"
+		"test-mocha": "_mocha -R spec --full-trace --trace ./test/**/*.spec.js",
+		"test-mocha-istanbul": "istanbul --config=./test/conf/istanbul.json cover ./node_modules/mocha/bin/_mocha -- -R spec --full-trace --trace ./test/**/*.spec.js",
+		"test": "npm run -s test-lint && npm run -s test-mocha-istanbul",
+		"test-travis": "npm run -s test-lint && npm run -s test-mocha-istanbul"
 	}
 }
