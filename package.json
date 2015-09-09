@@ -1,0 +1,35 @@
+{
+	"name": "forked-worker-pool",
+	"version": "1.0.0-beta",
+	"description": "A Simple library to handle forked node instances",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/asa-git/forked-worker-pool"
+	},
+	"bugs": {
+		"url": "https://github.com/asa-git/forked-worker-pool/issues"
+	},
+
+	"main": "lib/index.js",
+
+	"devDependencies": {
+		"jshint": "",
+		"eslint": "",
+		"mocha": "",
+		"chai": "",
+		"rimraf": "",
+		"istanbul": ""
+	},
+
+	"scripts": {
+		"lint-jshint": "jshint --verbose --show-non-errors ./lib",
+		"lint-eslint": "eslint ./lib",
+		"lint": "npm run -s lint-jshint && npm run -s lint-eslint",
+
+		"test-lint": "npm run -s lint",
+		"pretest-mocha":"rimraf ./build/test/coverage",
+		"test-mocha": "istanbul --config=./test/conf/istanbul.json cover ./node_modules/mocha/bin/_mocha -- -R spec --full-trace --trace ./test/**/*.spec.js",
+		"test": "npm run -s test-lint && npm run -s test-mocha"
+	}
+}

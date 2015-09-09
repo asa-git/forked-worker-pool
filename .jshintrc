@@ -1,0 +1,12 @@
+{
+	"curly": true,
+	"eqeqeq": true,
+	"freeze": true,
+	"futurehostile": true,
+	"latedef": true,
+	"maxdepth": 3,
+	"undef": true,
+	"unused": true,
+
+	"node": true
+}
