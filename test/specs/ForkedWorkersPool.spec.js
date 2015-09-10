@@ -71,12 +71,24 @@ describe('The Pool of a Forked Workers', function() {
 						assert.strictEqual(instance, pool);
 						assert.isBelow(counters.started, config.size);
 						counters.started++;
+						assert.deepEqual(instance.getStatus(),
+											{
+												workers: { created: config.size, idle: counters.started, busy: 0 },
+										  		jobs: { processed: 0, assigned: 0, pending: 0	}
+										  	});
 						if (counters.started === config.size) {
+							assert.deepEqual(instance.getStatus(),
+											{
+												workers: { created: config.size, idle: config.size, busy: 0 },
+										  		jobs: { processed: 0, assigned: 0, pending: 0	}
+										  	});
 							instance.releaseAll();
 						}
 					})
 					.on('disconnected', function(instance) {
 						assert.strictEqual(instance, pool);
+						assert.strictEqual(instance.getStatus().workers.created, 0);
+						assert.strictEqual(instance.getStatus().workers.idle, config.size - counters.disconnected - 1);
 						assert.isBelow(counters.disconnected, config.size);
 						counters.disconnected++;
 					})
@@ -85,6 +97,11 @@ describe('The Pool of a Forked Workers', function() {
 						assert.isBelow(counters.exit, config.size);
 						counters.exit++;
 						if (counters.exit === config.size) {
+							assert.deepEqual(instance.getStatus(),
+											{
+												workers: { created: 0, idle: 0, busy: 0 },
+										  		jobs: { processed: 0, assigned: 0, pending: 0	}
+										  	});
 							done();
 						}
 					})
@@ -98,11 +115,14 @@ describe('The Pool of a Forked Workers', function() {
 						assert.strictEqual(instance, pool);
 						assert.isBelow(counters.started, config.size);
 						counters.started++;
+						assert.strictEqual(instance.getStatus().workers.idle, 1);
 						assert.strictEqual(instance.releaseIdle(1), 1);
+						assert.strictEqual(instance.getStatus().workers.idle, 0);
 					})
 					.on('disconnected', function(instance) {
 						assert.strictEqual(instance, pool);
 						assert.isBelow(counters.disconnected, config.size);
+						assert.strictEqual(instance.getStatus().workers.created, config.size - counters.disconnected - 1);
 						counters.disconnected++;
 					})
 					.on('exit', function(instance) {
@@ -110,6 +130,11 @@ describe('The Pool of a Forked Workers', function() {
 						assert.isBelow(counters.exit, config.size);
 						counters.exit++;
 						if (counters.exit === config.size) {
+							assert.deepEqual(instance.getStatus(),
+											{
+												workers: { created: 0, idle: 0, busy: 0 },
+										  		jobs: { processed: 0, assigned: 0, pending: 0	}
+										  	});
 							done();
 						}
 					})
