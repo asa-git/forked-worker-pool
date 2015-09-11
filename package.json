@@ -1,7 +1,8 @@
 {
 	"name": "forked-worker-pool",
-	"version": "1.0.0-beta",
+	"version": "1.0.0",
 	"description": "A Simple library to handle forked node instances",
+	"keywords": [ "fork", "worker" ],
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -32,7 +33,6 @@
 		"pretest-mocha":"rimraf ./build/test/coverage",
 		"test-mocha": "_mocha -R spec --full-trace --trace ./test/**/*.spec.js",
 		"test-mocha-istanbul": "istanbul --config=./test/conf/istanbul.json cover ./node_modules/mocha/bin/_mocha -- -R spec --full-trace --trace ./test/**/*.spec.js",
-		"test": "npm run -s test-lint && npm run -s test-mocha-istanbul",
-		"test-travis": "npm run -s test-lint && npm run -s test-mocha-istanbul"
+		"test": "npm run -s test-lint && npm run -s test-mocha-istanbul"
 	}
 }
