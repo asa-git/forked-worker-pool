@@ -5,7 +5,7 @@ describe('The Pool of a Forked Workers', function() {
 	//var EventEmitter = require('events').EventEmitter;
 
 	//var _ForkedWorker=require(path.resolve('./', 'lib/_ForkedWorker'));
-	var Pool = require(path.resolve('./', 'lib/index'));
+	var Pool = require(path.resolve('./', 'lib/index')).Pool;
 
 	// our different test modules
 	var modules = {
