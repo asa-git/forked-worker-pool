@@ -1,6 +1,6 @@
 {
 	"name": "forked-worker-pool",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "A Simple library to handle forked node instances",
 	"keywords": [ "fork", "worker", "pool" ],
 	"license": "MIT",
