@@ -13,7 +13,7 @@ describe('Forked Workers', function() {
 	};
 
 	// default test timeout increased as we are launching new node processes.
-	this.timeout(5000);
+	this.timeout(30000);
 
 	// ensure we have a full stack trace when assertions fail
 	chai.config.includeStack = true;

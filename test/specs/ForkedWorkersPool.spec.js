@@ -6,6 +6,7 @@ describe('The Pool of a Forked Workers', function() {
 
 	//var _ForkedWorker=require(path.resolve('./', 'lib/_ForkedWorker'));
 	var Pool = require(path.resolve('./', 'lib/index')).Pool;
+	process.env.istanbul_config_file = './test/conf/istanbul.json';
 
 	// our different test modules
 	var modules = {
@@ -64,7 +65,7 @@ describe('The Pool of a Forked Workers', function() {
 			.forEach(test.bind(null, Error, 'Expecting a boolean for the autoStart parameter'));
 	});
 	it ('will notify the main application when workers are started and terminated', function(done) {
-		var config = { path: modules.echo, size: 10 };
+		var config = { path: modules.echo, size: 2 };
 		var counters = { started: 0, disconnected: 0, exit: 0};
 		var pool = new Pool(config)
 					.on('started', function(instance){
@@ -108,7 +109,7 @@ describe('The Pool of a Forked Workers', function() {
 					.start();
 	});
 	it ('will notify the main application when idles workers are terminated', function(done) {
-		var config = { path: modules.echo, size: 10 };
+		var config = { path: modules.echo, size: 2 };
 		var counters = { started: 0, disconnected: 0, exit: 0};
 		var pool = new Pool(config)
 					.on('started', function(instance){
@@ -141,7 +142,7 @@ describe('The Pool of a Forked Workers', function() {
 					.start();
 	});
 	it ('will automatically start forked instances if requested to', function(done) {
-		var config = { path: modules.echo, size: 10, autoStart: true };
+		var config = { path: modules.echo, size: 2, autoStart: true };
 		var counters = { started: 0, disconnected: 0, exit: 0};
 		var pool = new Pool(config)
 					.on('started', function(instance){
@@ -167,7 +168,7 @@ describe('The Pool of a Forked Workers', function() {
 					});
 	});
 	it ('will receive the expected result of the workers data processing', function(done) {
-		var config = { path: modules.echo, size: 10, autoStart: true };
+		var config = { path: modules.echo, size: 2, autoStart: true };
 		var counters = { started: 0, disconnected: 0, exit: 0};
 		var jobs = {};
 		for (var i=0;i<1000;i++) {
