@@ -23,6 +23,22 @@ describe('The Pool of a Forked Workers', function() {
 	// ensure we have a full stack trace when assertions fail
 	chai.config.includeStack = true;
 
+	function createConfig(path, size, autoStart, isSilent) {
+		var conf = {
+			path: path,
+			size: size,
+			autoStart: (autoStart===true),
+			silent: (isSilent===false ? false : true ) 
+		};
+		if (process.env.running_under_istanbul) {
+			conf.coverage = {
+				path: './node_modules/istanbul/lib/cli',
+				args: ['--config=./test/conf/istanbul.json', 'cover', '--report', 'none', '--print', 'none', '--include-pid']
+			};
+		}
+		return conf;
+	}
+
 	//TODO: update the configuration to allow coverage of the forked processes.
 
 	it ('throws an error on an invalid configuration object', function() {
@@ -54,18 +70,18 @@ describe('The Pool of a Forked Workers', function() {
 		// the number of workers
 		[ null, null, undefined, function() {}, '', 0, '2', [], false]
 			.map(function(config, index) {
-				var base = { path: 'somepath'};
+				var base = { path: modules.echo };
 				return (index===0 ? base : add(base, 'size', config));
 			})
 			.forEach(test.bind(null, Error, 'Expecting an integer>0 for the number of workers to be associated with this pool'));
 
 		// the optional auto start flag
 		[ null, undefined, function() {}, '', 0, [] ]
-			.map(function(config) { return add({ path: 'somepath', size: 1}, 'autoStart', config); })
+			.map(function(config) { return add({ path: modules.echo, size: 1}, 'autoStart', config); })
 			.forEach(test.bind(null, Error, 'Expecting a boolean for the autoStart parameter'));
 	});
 	it ('will notify the main application when workers are started and terminated', function(done) {
-		var config = { path: modules.echo, size: 2 };
+		var config = createConfig(modules.echo, 2);
 		var counters = { started: 0, disconnected: 0, exit: 0};
 		var pool = new Pool(config)
 					.on('started', function(instance){
@@ -109,7 +125,7 @@ describe('The Pool of a Forked Workers', function() {
 					.start();
 	});
 	it ('will notify the main application when idles workers are terminated', function(done) {
-		var config = { path: modules.echo, size: 2 };
+		var config = createConfig(modules.echo, 2);
 		var counters = { started: 0, disconnected: 0, exit: 0};
 		var pool = new Pool(config)
 					.on('started', function(instance){
@@ -142,7 +158,7 @@ describe('The Pool of a Forked Workers', function() {
 					.start();
 	});
 	it ('will automatically start forked instances if requested to', function(done) {
-		var config = { path: modules.echo, size: 2, autoStart: true };
+		var config = createConfig(modules.echo, 2, true);
 		var counters = { started: 0, disconnected: 0, exit: 0};
 		var pool = new Pool(config)
 					.on('started', function(instance){
@@ -168,7 +184,7 @@ describe('The Pool of a Forked Workers', function() {
 					});
 	});
 	it ('will receive the expected result of the workers data processing', function(done) {
-		var config = { path: modules.echo, size: 2, autoStart: true };
+		var config = createConfig(modules.echo, 2, true);
 		var counters = { started: 0, disconnected: 0, exit: 0};
 		var jobs = {};
 		for (var i=0;i<1000;i++) {

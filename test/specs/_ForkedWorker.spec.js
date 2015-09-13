@@ -24,6 +24,17 @@ describe('Handlers of a Forked Worker', function() {
 
 	//TODO: update the configuration to allow coverage of the forked processes.
 
+	function createConfig(path, isSilent) {
+		return (process.env.running_under_istanbul ?
+				{	path: './node_modules/istanbul/lib/cli',
+					args: ['--config=./test/conf/istanbul.json', 'cover', '--report', 'none', '--print', 'none', '--include-pid', path],
+					options: { silent: (isSilent===false ? false : true ) } } : 
+				{	path: path,
+					args: [],
+					options: { silent: (isSilent===false ? false : true ) }
+				});
+	}
+
 	// generic test used multiple times
 	function validateInstance(instance, worker, shouldBeConnected) {
 		assert.strictEqual(instance, worker);
@@ -46,7 +57,7 @@ describe('Handlers of a Forked Worker', function() {
 
 	it('emit the required events when the forked worker is started and then terminated', function(done) {
 		var events = [];
-		var worker = new _ForkedWorker(modules.echo)
+		var worker = new _ForkedWorker(createConfig(modules.echo))
 						.on('started', function(instance) {
 							validateInstance(instance, worker, true);
 							events.push('started');
@@ -67,7 +78,7 @@ describe('Handlers of a Forked Worker', function() {
 	it('emit the required events and result of the forked worker data processing', function(done) {
 		var events = [];
 		var myData = { a: { b: 0, c: 'sometext'} };
-		var worker = new _ForkedWorker(modules.echo)
+		var worker = new _ForkedWorker(createConfig(modules.echo))
 						.on('started', function(instance) {
 							validateInstance(instance, worker, true);
 							assert.isTrue(instance.send(myData));
@@ -96,7 +107,7 @@ describe('Handlers of a Forked Worker', function() {
 	it('emit the required events when a non fatal error occurs', function(done) {
 		var events = [];
 		var myData = { a: { b: 0, c: 'sometext'} };
-		var worker = new _ForkedWorker(modules.failProcessing)
+		var worker = new _ForkedWorker(createConfig(modules.failProcessing))
 						.on('started', function(instance) {
 							validateInstance(instance, worker, true);
 							assert.isTrue(instance.send(myData));
@@ -123,7 +134,7 @@ describe('Handlers of a Forked Worker', function() {
 	it('emit the required events when a fatal error occurs', function(done) {
 		var events = [];
 		var myData = { a: { b: 0, c: 'sometext'} };
-		var worker = new _ForkedWorker(modules.fatalProcessing)
+		var worker = new _ForkedWorker(createConfig(modules.fatalProcessing))
 						.on('started', function(instance) {
 							validateInstance(instance, worker, true);
 							assert.isTrue(instance.send(myData));
@@ -148,7 +159,7 @@ describe('Handlers of a Forked Worker', function() {
 	});
 	it('emit the required events when a fatal error occurs preventing the forked worker to start', function(done) {
 		var events = [];
-		var worker = new _ForkedWorker(modules.failOnLoad, { silent : true })
+		var worker = new _ForkedWorker(createConfig(modules.failOnLoad))
 						.on('disconnected', function(instance) {
 							validateInstance(instance, worker, false);
 							events.push('disconnected');
@@ -163,7 +174,7 @@ describe('Handlers of a Forked Worker', function() {
 	});
 	it('can terminate the forked worker before receiving the started message', function(done) {
 		var events = [];
-		var worker = new _ForkedWorker(modules.echo)
+		var worker = new _ForkedWorker(createConfig(modules.echo))
 						.on('disconnected', function(instance) {
 							validateInstance(instance, worker, false);
 							events.push('disconnected');
@@ -180,7 +191,7 @@ describe('Handlers of a Forked Worker', function() {
 	it('can terminate the forked worker before receiving the result of a data processing', function(done) {
 		var events = [];
 		var myData = { a: { b: 0, c: 'sometext'} };
-		var worker = new _ForkedWorker(modules.slowWorker)
+		var worker = new _ForkedWorker(createConfig(modules.slowWorker))
 						.on('started', function(instance) {
 							validateInstance(instance, worker, true);
 							assert.isTrue(instance.send(myData));
@@ -202,7 +213,7 @@ describe('Handlers of a Forked Worker', function() {
 	it('will not sent data to a disconnecting worker', function(done) {
 		var events = [];
 		var myData = { a: { b: 0, c: 'sometext'} };
-		var worker = new _ForkedWorker(modules.slowWorker)
+		var worker = new _ForkedWorker(createConfig(modules.slowWorker))
 						.on('started', function(instance) {
 							validateInstance(instance, worker, true);
 							instance.disconnect();
@@ -222,7 +233,7 @@ describe('Handlers of a Forked Worker', function() {
 		validateAllowedEvents(worker);
 	});
 	it('enforce the uses of the new operator', function(done) {
-		var worker = _ForkedWorker(modules.echo);
+		var worker = _ForkedWorker(createConfig(modules.echo));
 		assert.instanceOf(worker, _ForkedWorker);
 		worker
 			.on('exit', function(instance, exitCode) {
