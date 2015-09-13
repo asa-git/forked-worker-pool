@@ -2,11 +2,8 @@ describe('The Pool of a Forked Workers', function() {
 	var chai = require('chai');
 	var assert = chai.assert;
 	var path = require('path');
-	//var EventEmitter = require('events').EventEmitter;
 
-	//var _ForkedWorker=require(path.resolve('./', 'lib/_ForkedWorker'));
 	var Pool = require(path.resolve('./', 'lib/index')).Pool;
-	process.env.istanbul_config_file = './test/conf/istanbul.json';
 
 	// our different test modules
 	var modules = {
@@ -39,8 +36,6 @@ describe('The Pool of a Forked Workers', function() {
 		return conf;
 	}
 
-	//TODO: update the configuration to allow coverage of the forked processes.
-
 	it ('throws an error on an invalid configuration object', function() {
 
 		function test(expectedErrorType, expectedErrorMessage, config, index) {
@@ -60,12 +55,15 @@ describe('The Pool of a Forked Workers', function() {
 			.forEach(test.bind(null, TypeError, 'Expecting a valid config object'));
 
 		// the module path
-		[ null, null, undefined, function() {}, '', 0, [], false]
+		[ null, null, undefined, function() {}, '', '  ', 0, [], false]
 			.map(function(config, index) {
 				var base = {};
 				return (index===0 ? base : add(base, 'path', config));
 			})
 			.forEach(test.bind(null, Error, 'Expecting a path for the workers module'));
+		
+		test(Error, 'Expecting an absolute path for the workers module', { path: './someRelativePath' });
+		test(Error, 'Expecting an existing file for the workers module', { path: path.resolve(__dirname,'unknownFile') });
 
 		// the number of workers
 		[ null, null, undefined, function() {}, '', 0, '2', [], false]
@@ -79,6 +77,11 @@ describe('The Pool of a Forked Workers', function() {
 		[ null, undefined, function() {}, '', 0, [] ]
 			.map(function(config) { return add({ path: modules.echo, size: 1}, 'autoStart', config); })
 			.forEach(test.bind(null, Error, 'Expecting a boolean for the autoStart parameter'));
+
+		// the optional silent flag
+		[ null, undefined, function() {}, '', 0, [] ]
+			.map(function(config) { return add({ path: modules.echo, size: 1}, 'silent', config); })
+			.forEach(test.bind(null, Error, 'Expecting a boolean for the silent parameter'));
 	});
 	it ('will notify the main application when workers are started and terminated', function(done) {
 		var config = createConfig(modules.echo, 2);

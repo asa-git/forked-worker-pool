@@ -5,7 +5,6 @@ describe('Handlers of a Forked Worker', function() {
 	var EventEmitter = require('events').EventEmitter;
 
 	var _ForkedWorker=require(path.resolve('./', 'lib/_ForkedWorker'));
-	process.env.istanbul_config_file = './test/conf/istanbul.json';
 
 	// our different test modules
 	var modules = {
@@ -21,8 +20,6 @@ describe('Handlers of a Forked Worker', function() {
 
 	// ensure we have a full stack trace when assertions fail
 	chai.config.includeStack = true;
-
-	//TODO: update the configuration to allow coverage of the forked processes.
 
 	function createConfig(path, isSilent) {
 		return (process.env.running_under_istanbul ?

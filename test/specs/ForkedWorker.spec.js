@@ -9,7 +9,8 @@ describe('Forked Workers', function() {
 		echo: path.resolve(__dirname , './modules/Echo'),
 		failProcessing: path.resolve(__dirname , './modules/FailProcessing'),
 		fatalProcessing: path.resolve(__dirname , './modules/FatalProcessing'),
-		failOnLoad: path.resolve(__dirname , './modules/FailOnLoad')
+		failOnLoad: path.resolve(__dirname , './modules/FailOnLoad'),
+		enforceNew: path.resolve(__dirname, './modules/EnforceNew')
 	};
 
 	// default test timeout increased as we are launching new node processes.
@@ -18,11 +19,21 @@ describe('Forked Workers', function() {
 	// ensure we have a full stack trace when assertions fail
 	chai.config.includeStack = true;
 
-	//TODO: update the configuration to allow coverage of the forked processes.
+	function createConfig(path, isSilent) {
+		return (process.env.running_under_istanbul ?
+				{	path: './node_modules/istanbul/lib/cli',
+					args: ['--config=./test/conf/istanbul.json', 'cover', '--report', 'none', '--print', 'none', '--include-pid', path],
+					options: { silent: (isSilent===false ? false : true ) } } : 
+				{	path: path,
+					args: [],
+					options: { silent: (isSilent===false ? false : true ) }
+				});
+	}
 
 	it('emit the required events when started and then terminated', function(done) {
 		var events = [];
-		var worker = fork(modules.echo)
+		var config = createConfig(modules.echo);
+		var worker = fork(config.path, config.args, config.options)
 						.on('message', function(message) {
 							assert.deepEqual(message, { event: 'started', instanceId: worker.pid });
 							assert.isTrue(worker.connected);
@@ -43,7 +54,8 @@ describe('Forked Workers', function() {
 	it('emit the required events and results of their data processing', function(done) {
 		var events = [];
 		var myData = { a: { b: 0, c: 'sometext'} };
-		var worker = fork(modules.echo)
+		var config = createConfig(modules.echo);
+		var worker = fork(config.path, config.args, config.options)
 						.on('message', function(message) {
 							if (message.event==='started') {
 								assert.deepEqual(message, { event: message.event, instanceId: worker.pid });	
@@ -73,7 +85,8 @@ describe('Forked Workers', function() {
 	it('emit the required events when a non fatal error occurs', function(done) {
 		var events = [];
 		var myData = { a: { b: 0, c: 'sometext'} };
-		var worker = fork(modules.failProcessing)
+		var config = createConfig(modules.failProcessing);
+		var worker = fork(config.path, config.args, config.options)
 						.on('message', function(message) {
 							if (message.event==='started') {
 								assert.deepEqual(message, { event: message.event, instanceId: worker.pid });	
@@ -103,7 +116,8 @@ describe('Forked Workers', function() {
 	it('emit the required events when a fatal error occurs', function(done) {
 		var events = [];
 		var myData = { a: { b: 0, c: 'sometext'} };
-		var worker = fork(modules.fatalProcessing)
+		var config = createConfig(modules.fatalProcessing);
+		var worker = fork(config.path, config.args, config.options)
 						.on('message', function(message) {
 							if (message.event==='started') {
 								assert.deepEqual(message, { event: message.event, instanceId: worker.pid });	
@@ -131,7 +145,8 @@ describe('Forked Workers', function() {
 	});
 	it('emit the required events when a fatal error occurs preventing them to start', function(done) {
 		var events = [];
-		var worker = fork(modules.failOnLoad, { silent : true })
+		var config = createConfig(modules.failOnLoad);
+		var worker = fork(config.path, config.args, config.options)
 						.on('error', function() {
 							assert.fail(arguments,null,'error should not have been emitted');
 						})
@@ -148,6 +163,27 @@ describe('Forked Workers', function() {
 								assert.isFalse(worker.connected);
 								assert.deepEqual(events, ['disconnect']);
 								done();
+						});
+	});
+	it('enforce the uses of the new operator', function(done) {
+		var events = [];
+		var config = createConfig(modules.enforceNew);
+		var worker = fork(config.path, config.args, config.options)
+						.on('message', function(message) {
+							assert.deepEqual(message, { event: 'started', instanceId: worker.pid });
+							assert.isTrue(worker.connected);
+							events.push('started');
+							worker.disconnect();
+						})
+						.on('disconnect', function() {
+							assert.isFalse(worker.connected);
+							events.push('disconnect');
+							})
+						.on('exit', function(exitCode) {
+							assert.strictEqual(exitCode, 0);
+							assert.isFalse(worker.connected);
+							assert.deepEqual(events, ['started', 'disconnect']);
+							done();
 						});
 	});
 });
