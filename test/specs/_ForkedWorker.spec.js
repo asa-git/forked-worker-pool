@@ -8,11 +8,11 @@ describe('Handlers of a Forked Worker', function() {
 
 	// our different test modules
 	var modules = {
-		echo: path.resolve(__dirname , './modules/Echo'),
-		failProcessing: path.resolve(__dirname , './modules/FailProcessing'),
-		fatalProcessing: path.resolve(__dirname , './modules/FatalProcessing'),
-		failOnLoad: path.resolve(__dirname , './modules/FailOnLoad'),
-		slowWorker: path.resolve(__dirname , './modules/SlowWorker')
+		echo: path.resolve(__dirname , './modules/Echo.js'),
+		failProcessing: path.resolve(__dirname , './modules/FailProcessing.js'),
+		fatalProcessing: path.resolve(__dirname , './modules/FatalProcessing.js'),
+		failOnLoad: path.resolve(__dirname , './modules/FailOnLoad.js'),
+		slowWorker: path.resolve(__dirname , './modules/SlowWorker.js')
 	};
 
 	// default test timeout increased as we are launching new node processes.

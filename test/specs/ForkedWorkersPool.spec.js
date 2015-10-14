@@ -7,11 +7,11 @@ describe('The Pool of a Forked Workers', function() {
 
 	// our different test modules
 	var modules = {
-		echo: path.resolve(__dirname , './modules/Echo'),
-		failProcessing: path.resolve(__dirname , './modules/FailProcessing'),
-		fatalProcessing: path.resolve(__dirname , './modules/FatalProcessing'),
-		failOnLoad: path.resolve(__dirname , './modules/FailOnLoad'),
-		slowWorker: path.resolve(__dirname , './modules/SlowWorker')
+		echo: path.resolve(__dirname , './modules/Echo.js'),
+		failProcessing: path.resolve(__dirname , './modules/FailProcessing.js'),
+		fatalProcessing: path.resolve(__dirname , './modules/FatalProcessing.js'),
+		failOnLoad: path.resolve(__dirname , './modules/FailOnLoad.js'),
+		slowWorker: path.resolve(__dirname , './modules/SlowWorker.js')
 	};
 
 	// default test timeout increased as we are launching new node processes.
@@ -222,5 +222,45 @@ describe('The Pool of a Forked Workers', function() {
 						}
 					});
 		Object.keys(jobs).forEach(function(key) { pool.send(jobs[key]); });
+	});
+	it ('will receive the expected result of the workers data processing in a callback', function(done) {
+		var config = createConfig(modules.echo, 2, true);
+		var counters = { started: 0, disconnected: 0, exit: 0};
+		var jobs = {};
+		for (var i=0;i<1000;i++) {
+			jobs[i] = { index: i };
+		}
+		var callback = function(instance, dataSent, dataReceived) {
+						assert.strictEqual(instance, pool);
+						assert.deepEqual(dataReceived, { echoOf: dataSent } );
+						assert.isDefined(jobs[dataSent.index]);
+						delete jobs[dataSent.index];
+						if (Object.keys(jobs).length===0) {
+							instance.releaseAll();
+						}
+			};
+		var pool = new Pool(config)
+					.on('started', function(instance){
+						assert.strictEqual(instance, pool);
+						assert.isBelow(counters.started, config.size);
+						counters.started++;
+					})
+					.on('data', function() {
+						assert.fail(arguments, null, 'Event should not be raised as a callback was specified for all the jobs');
+					})
+					.on('disconnected', function(instance) {
+						assert.strictEqual(instance, pool);
+						assert.isBelow(counters.disconnected, config.size);
+						counters.disconnected++;
+					})
+					.on('exit', function(instance) {
+						assert.strictEqual(instance, pool);
+						assert.isBelow(counters.exit, config.size);
+						counters.exit++;
+						if (counters.exit === config.size) {
+							done();
+						}
+					});
+		Object.keys(jobs).forEach(function(key) { pool.send(jobs[key], callback); });
 	});
 });

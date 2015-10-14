@@ -1,6 +1,6 @@
 {
 	"name": "forked-worker-pool",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"description": "A Simple library to handle forked node instances",
 	"keywords": [ "fork", "worker", "pool" ],
 	"license": "MIT",
@@ -16,11 +16,11 @@
 
 	"devDependencies": {
 		"jshint": "^2.8.0",
-		"eslint": "^1.4.1",
-		"mocha": "^2.3.2",
-		"chai": "^3.2.0",
+		"eslint": "^1.6.0",
+		"mocha": "^2.3.3",
+		"chai": "^3.3.0",
 		"rimraf": "^2.4.3",
-		"istanbul": "^0.3.19",
+		"istanbul": "^0.3.22",
 		"coveralls": "^2.11.4"
 	},
 

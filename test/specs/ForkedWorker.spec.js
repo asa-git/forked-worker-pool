@@ -6,11 +6,11 @@ describe('Forked Workers', function() {
 
 	// our different test modules
 	var modules = {
-		echo: path.resolve(__dirname , './modules/Echo'),
-		failProcessing: path.resolve(__dirname , './modules/FailProcessing'),
-		fatalProcessing: path.resolve(__dirname , './modules/FatalProcessing'),
-		failOnLoad: path.resolve(__dirname , './modules/FailOnLoad'),
-		enforceNew: path.resolve(__dirname, './modules/EnforceNew')
+		echo: path.resolve(__dirname , './modules/Echo.js'),
+		failProcessing: path.resolve(__dirname , './modules/FailProcessing.js'),
+		fatalProcessing: path.resolve(__dirname , './modules/FatalProcessing.js'),
+		failOnLoad: path.resolve(__dirname , './modules/FailOnLoad.js'),
+		enforceNew: path.resolve(__dirname, './modules/EnforceNew.js')
 	};
 
 	// default test timeout increased as we are launching new node processes.
