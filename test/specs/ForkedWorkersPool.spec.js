@@ -9,6 +9,7 @@ describe('The Pool of a Forked Workers', function() {
 	var modules = {
 		echo: path.resolve(__dirname , './modules/Echo.js'),
 		failProcessing: path.resolve(__dirname , './modules/FailProcessing.js'),
+		FailProcessingTwice: path.resolve(__dirname , './modules/FailProcessingTwice.js'),
 		fatalProcessing: path.resolve(__dirname , './modules/FatalProcessing.js'),
 		failOnLoad: path.resolve(__dirname , './modules/FailOnLoad.js'),
 		slowWorker: path.resolve(__dirname , './modules/SlowWorker.js')
@@ -94,13 +95,13 @@ describe('The Pool of a Forked Workers', function() {
 						assert.deepEqual(instance.getStatus(),
 											{
 												workers: { created: config.size, idle: counters.started, busy: 0 },
-										  		jobs: { processed: 0, assigned: 0, pending: 0	}
+										  		jobs: { processed: 0, failed: 0, assigned: 0, pending: 0	}
 										  	});
 						if (counters.started === config.size) {
 							assert.deepEqual(instance.getStatus(),
 											{
 												workers: { created: config.size, idle: config.size, busy: 0 },
-										  		jobs: { processed: 0, assigned: 0, pending: 0	}
+										  		jobs: { processed: 0, failed: 0, assigned: 0, pending: 0	}
 										  	});
 							instance.releaseAll();
 						}
@@ -120,7 +121,7 @@ describe('The Pool of a Forked Workers', function() {
 							assert.deepEqual(instance.getStatus(),
 											{
 												workers: { created: 0, idle: 0, busy: 0 },
-										  		jobs: { processed: 0, assigned: 0, pending: 0	}
+										  		jobs: { processed: 0, failed: 0, assigned: 0, pending: 0	}
 										  	});
 							done();
 						}
@@ -153,7 +154,7 @@ describe('The Pool of a Forked Workers', function() {
 							assert.deepEqual(instance.getStatus(),
 											{
 												workers: { created: 0, idle: 0, busy: 0 },
-										  		jobs: { processed: 0, assigned: 0, pending: 0	}
+										  		jobs: { processed: 0, failed: 0, assigned: 0, pending: 0	}
 										  	});
 							done();
 						}
@@ -223,21 +224,35 @@ describe('The Pool of a Forked Workers', function() {
 					});
 		Object.keys(jobs).forEach(function(key) { pool.send(jobs[key]); });
 	});
-	it ('will receive the expected result of the workers data processing in a callback', function(done) {
-		var config = createConfig(modules.echo, 2, true);
+	it ('will receive the expected result and failure of the workers data processing in supplied callbacks', function(done) {
+		var config = createConfig(modules.FailProcessingTwice, 1, true);
 		var counters = { started: 0, disconnected: 0, exit: 0};
 		var jobs = {};
-		for (var i=0;i<1000;i++) {
+		for (var i=0;i<10;i++) {
 			jobs[i] = { index: i };
 		}
-		var callback = function(instance, dataSent, dataReceived) {
+		var failureCount = 0;
+		var passCallback = function(instance, dataSent, dataReceived) {
 						assert.strictEqual(instance, pool);
-						assert.deepEqual(dataReceived, { echoOf: dataSent } );
+						assert.deepEqual(dataReceived, dataSent );
 						assert.isDefined(jobs[dataSent.index]);
 						delete jobs[dataSent.index];
 						if (Object.keys(jobs).length===0) {
 							instance.releaseAll();
 						}
+			};
+		var failCallback = function(instance, err, dataSent, requeue) {
+						assert.strictEqual(instance, pool);
+						assert.isDefined(jobs[dataSent.index]);
+						assert.strictEqual(err, 'Fails Processing');
+						if (failureCount===0) {
+							delete jobs[dataSent.index];
+						} else if (failureCount===1) {
+							requeue();
+						} else {
+							assert.fail(err, null, 'Expected failure');
+						}
+						failureCount++;
 			};
 		var pool = new Pool(config)
 					.on('started', function(instance){
@@ -255,12 +270,17 @@ describe('The Pool of a Forked Workers', function() {
 					})
 					.on('exit', function(instance) {
 						assert.strictEqual(instance, pool);
+						assert.deepEqual(instance.getStatus(),
+											{
+												workers: { created: 0, idle: 0, busy: 0 },
+										  		jobs: { processed: 10-1, failed: 2, assigned: 0, pending: 0	}
+										  	});
 						assert.isBelow(counters.exit, config.size);
 						counters.exit++;
 						if (counters.exit === config.size) {
 							done();
 						}
 					});
-		Object.keys(jobs).forEach(function(key) { pool.send(jobs[key], callback); });
+		Object.keys(jobs).forEach(function(key) { pool.send(jobs[key], passCallback, failCallback); });
 	});
 });
